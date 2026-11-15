@@ -152,11 +152,17 @@ function effectiveEncoding() {
 /* ---------------- 解析章节 ---------------- */
 function parseChapters(text) {
   state.nl = text.indexOf('\r\n') >= 0 ? '\r\n' : '\n';
-  // 第X章/回/卷（可带分隔符与标题）；序章/楔子/后记/尾声/番外/终章；Chapter N
-  const re = /^[ \t\u3000]*(?:第[ \t\u3000]*(?:[0-9０-９]{1,7}|[〇零一二两三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾佰仟]{1,12})[ \t\u3000]*[章回卷](?:[ \t\u3000：:、，,·\-—]+[^\r\n]{0,40})?|(?:序章|楔子|后记|尾声|番外|终章|Chapter[ \t]+\d+)[^\r\n]{0,40})/gmi;
+  // 只把“顶格”的真正章标题当章节：第X章/回/卷 后必须跟空白或行尾（避免“第一回合…”之类正文误判）
+  const re = /^第[ \t\u3000]*(?:[0-9０-９]{1,7}|[〇零一二两三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾佰仟]{1,12})[ \t\u3000]*[章回卷](?=[ \t\u3000]|$)[^\r\n]*|^(?:序章|楔子|后记|尾声|番外|终章|Chapter[ \t]+\d+)[^\r\n]*/gmi;
+  const nt = s => s.replace(/[\s\u3000]/g, '').replace(/[，。！？、：；“”‘’（）()《》〈〉「」『』\[\]【】.,!?:;'"*\-—―]/g, '').toLowerCase();
   const heads = [];
   let m;
-  while ((m = re.exec(text)) !== null) heads.push({ start: m.index, title: m[0].trim() });
+  while ((m = re.exec(text)) !== null) {
+    const title = m[0].trim();
+    // 跳过与上一个章节标题完全相同的重复标题
+    if (heads.length && nt(heads[heads.length - 1].title) === nt(title)) continue;
+    heads.push({ start: m.index, title });
+  }
   const chapters = [];
   for (let i = 0; i < heads.length; i++) {
     chapters.push({ start: heads[i].start, end: i + 1 < heads.length ? heads[i + 1].start : text.length, title: heads[i].title });
@@ -369,6 +375,47 @@ function toggleSidebar() {
   }
 }
 
+/* ---------------- 删除章节 / 右键菜单 ---------------- */
+let ctxIdx = -1;
+function openCtxMenu(x, y, idx) {
+  ctxIdx = idx;
+  const menu = $('#ctxMenu');
+  menu.innerHTML = '';
+  const b = document.createElement('button');
+  b.className = 'danger';
+  b.textContent = '删除本章';
+  b.addEventListener('click', () => { hideCtxMenu(); deleteChapter(ctxIdx); });
+  menu.appendChild(b);
+  menu.hidden = false;
+  menu.style.left = Math.min(x, window.innerWidth - 168) + 'px';
+  menu.style.top = Math.min(y, window.innerHeight - 52) + 'px';
+}
+function hideCtxMenu() { const m = $('#ctxMenu'); if (m) m.hidden = true; }
+
+function deleteChapter(idx) {
+  if (!state.chapters.length) return;
+  idx = Math.max(0, Math.min(idx, state.chapters.length - 1));
+  const c = state.chapters[idx];
+  if (!c) return;
+  const name = c.title || ('第 ' + (idx + 1) + ' 章');
+  if (!confirm('确定删除该章节吗？\n\n' + name + '\n\n（删除后需按 Ctrl+S 保存才会写回文件）')) return;
+  if (state.editing) commitCurrent();
+  const c2 = state.chapters[idx] || c;
+  state.text = state.text.slice(0, c2.start) + state.text.slice(c2.end);
+  state.text = state.text.replace(/(\r\n){3,}/g, '\r\n\r\n');
+  state.dirty = true;
+  state.chapters = parseChapters(state.text);
+  if (!state.chapters.length) {
+    renderTOC(); updateMeta(); $('#chapterView').hidden = true; $('#emptyState').hidden = false;
+    updateDirtyUI(); status('已删除章节（已无可读章节），Ctrl+S 保存');
+    return;
+  }
+  state.cur = Math.min(idx, state.chapters.length - 1);
+  renderTOC(); updateMeta(); renderChapter(state.cur, {});
+  updateDirtyUI();
+  status('已删除《' + name + '》，按 Ctrl+S 保存写回文件');
+}
+
 /* ---------------- 打开 / 加载 ---------------- */
 async function openFile() {
   if (window.showOpenFilePicker && window.isSecureContext) {
@@ -547,6 +594,23 @@ function bind() {
     gotoChapter(+li.dataset.i);
     if (window.innerWidth <= 820) document.body.classList.remove('toc-open');
   });
+  // 右键：删除本章（目录项 / 章标题）
+  $('#toc').addEventListener('contextmenu', e => {
+    const li = e.target.closest('li');
+    if (!li) return;
+    e.preventDefault();
+    openCtxMenu(e.clientX, e.clientY, +li.dataset.i);
+  });
+  $('#chapterTitle').addEventListener('contextmenu', e => {
+    e.preventDefault();
+    openCtxMenu(e.clientX, e.clientY, state.cur);
+  });
+  document.addEventListener('click', hideCtxMenu);
+  window.addEventListener('scroll', hideCtxMenu, true);
+  document.addEventListener('contextmenu', e => {
+    if (!e.target.closest('#toc') && e.target.id !== 'chapterTitle') hideCtxMenu();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hideCtxMenu(); });
   $('#tocSearch').addEventListener('input', filterTOC);
   $('#btnSidebar').addEventListener('click', toggleSidebar);
 
