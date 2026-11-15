@@ -204,8 +204,14 @@ function renderChapter(idx, opts = {}) {
   splitBlocks(body).forEach(b => bodyEl.appendChild(makePara(b)));
   $('#navInfo').textContent = (idx + 1) + ' / ' + state.chapters.length;
   $$('#toc li').forEach(li => li.classList.toggle('active', +li.dataset.i === idx));
+  // 只滚动目录容器，避免影响整页
   const activeLi = $('#toc li.active');
-  if (activeLi) activeLi.scrollIntoView({ block: 'nearest' });
+  const tocEl = $('#toc');
+  if (activeLi && tocEl) {
+    const top = activeLi.offsetTop, h = activeLi.offsetHeight;
+    if (top < tocEl.scrollTop) tocEl.scrollTop = top;
+    else if (top + h > tocEl.scrollTop + tocEl.clientHeight) tocEl.scrollTop = top + h - tocEl.clientHeight;
+  }
   updateStatus();
   if (!opts.keepScroll) $('#viewport').scrollTop = opts.scroll != null ? opts.scroll : 0;
 }

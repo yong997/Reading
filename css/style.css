@@ -30,7 +30,7 @@ body[data-theme="dark"]{
 
 *{ box-sizing:border-box; }
 [hidden]{ display:none !important; }
-html,body{ height:100%; margin:0; }
+html,body{ height:100%; margin:0; overflow:hidden; }
 body{
   font-family: var(--font-ui);
   background: var(--bg);
@@ -42,6 +42,7 @@ body{
 /* 工具栏 */
 #toolbar{
   height: var(--toolbar-h);
+  flex:0 0 auto;
   display:flex; align-items:center; gap:10px;
   padding:0 12px;
   background: var(--bg-toolbar);
@@ -79,7 +80,7 @@ body{
 #lblFont{ min-width:18px; text-align:center; color:var(--fg); }
 
 /* 布局 */
-#layout{ flex:1 1 auto; display:flex; min-height:0; }
+#layout{ flex:1 1 auto; display:flex; min-height:0; overflow:hidden; }
 #sidebar{
   width:270px; flex:0 0 270px;
   background: var(--bg-panel);
