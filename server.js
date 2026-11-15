@@ -25,4 +25,4 @@ http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': mime[path.extname(fp).toLowerCase()] || 'application/octet-stream' });
     res.end(data);
   });
-}).listen(port, () => console.log('Reading server running: http://localhost:' + port + '/index.html'));
+}).listen(port, '127.0.0.1', () => console.log('Reading server running: http://127.0.0.1:' + port + '/index.html'));

@@ -1,10 +1,10 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-set "PORT=8137"
+if not defined PORT set "PORT=8137"
 echo ============================================
 echo   Reading - TXT Reader
-echo   URL: http://localhost:%PORT%/index.html
+echo   URL: http://127.0.0.1:%PORT%/index.html
 echo   Close this window to stop the server.
 echo ============================================
 echo.
@@ -19,17 +19,20 @@ if "%RUNTIME%"=="node" goto usenode
 goto noruntime
 
 :usepy
-start "" "http://localhost:%PORT%/index.html"
-python -m http.server %PORT%
+echo Starting server (python) on 127.0.0.1:%PORT% ...
+start "" /b cmd /c "ping 127.0.0.1 -n 2 >nul & explorer http://127.0.0.1:%PORT%/index.html"
+python -m http.server %PORT% --bind 127.0.0.1
 goto end
 
 :usepy2
-start "" "http://localhost:%PORT%/index.html"
-py -m http.server %PORT%
+echo Starting server (py) on 127.0.0.1:%PORT% ...
+start "" /b cmd /c "ping 127.0.0.1 -n 2 >nul & explorer http://127.0.0.1:%PORT%/index.html"
+py -m http.server %PORT% --bind 127.0.0.1
 goto end
 
 :usenode
-start "" "http://localhost:%PORT%/index.html"
+echo Starting server (node) on 127.0.0.1:%PORT% ...
+start "" /b cmd /c "ping 127.0.0.1 -n 2 >nul & explorer http://127.0.0.1:%PORT%/index.html"
 node server.js
 goto end
 
