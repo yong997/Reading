@@ -170,7 +170,10 @@ function splitBlocks(body) {
   let s = body.replace(/\r\n/g, '\n');
   s = s.replace(/^\n+/, '').replace(/\n+$/, '');
   if (!s) return [];
-  return s.split(/\n[ \t\u3000]*\n/);
+  // 段落以“空行”分隔；连续多个空行视为一个分隔，并过滤空段落
+  return s.split(/\n{2,}/)
+    .map(x => x.replace(/[ \t\u3000]+$/, ''))
+    .filter(x => x.trim() !== '');
 }
 function makePara(text) {
   const p = document.createElement('p');
@@ -183,11 +186,77 @@ function setParaEditable(p) {
   if (state.editing) {
     p.setAttribute('contenteditable', 'plaintext-only');
     p.addEventListener('input', onParaInput);
+    p.addEventListener('keydown', onParaKeydown);
   } else {
     p.removeAttribute('contenteditable');
   }
 }
 function onParaInput() { state.dirty = true; updateDirtyUI(); }
+
+/* 段落内光标字符偏移 */
+function caretCharOffset(el) {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return 0;
+  const r = sel.getRangeAt(0);
+  if (!el.contains(r.startContainer)) return 0;
+  const pre = document.createRange();
+  pre.selectNodeContents(el);
+  pre.setEnd(r.endContainer, r.endOffset);
+  return pre.toString().replace(/\r\n/g, '\n').length;
+}
+/* 把光标放到元素内第 charIndex 个字符处 */
+function placeCaretAt(el, charIndex) {
+  el.focus();
+  const range = document.createRange();
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+  let remaining = charIndex, node;
+  while ((node = walker.nextNode())) {
+    if (remaining <= node.length) {
+      range.setStart(node, remaining);
+      range.collapse(true);
+      const sel = window.getSelection();
+      sel.removeAllRanges(); sel.addRange(range);
+      return;
+    }
+    remaining -= node.length;
+  }
+  range.selectNodeContents(el); range.collapse(false);
+  const sel = window.getSelection();
+  sel.removeAllRanges(); sel.addRange(range);
+}
+function getParaText(p) { return p.textContent != null ? p.textContent : ''; }
+/* 段首 Backspace 合并到上一段；段尾 Delete 合并下一段 */
+function onParaKeydown(e) {
+  if (e.isComposing) return;
+  const p = e.currentTarget;
+  if (e.key === 'Backspace') {
+    if (caretCharOffset(p) === 0) {
+      const prev = p.previousElementSibling;
+      if (prev && prev.classList.contains('para')) {
+        e.preventDefault();
+        const base = getParaText(prev);
+        const add = getParaText(p).replace(/^[\s\u3000]+/, '');
+        prev.textContent = base + add;
+        p.remove();
+        placeCaretAt(prev, base.length);
+        state.dirty = true; updateDirtyUI();
+      }
+    }
+  } else if (e.key === 'Delete') {
+    const text = getParaText(p);
+    if (caretCharOffset(p) >= text.length) {
+      const next = p.nextElementSibling;
+      if (next && next.classList.contains('para')) {
+        e.preventDefault();
+        const add = getParaText(next).replace(/^[\s\u3000]+/, '');
+        p.textContent = text + add;
+        next.remove();
+        placeCaretAt(p, text.length);
+        state.dirty = true; updateDirtyUI();
+      }
+    }
+  }
+}
 
 function renderChapter(idx, opts = {}) {
   if (!state.chapters.length) return;
