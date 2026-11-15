@@ -15,7 +15,7 @@ const state = {
   editing: false,
   dirty: false,
   nl: '\n',
-  prefs: { font: 19, lh: 1.95, theme: 'light', width: 'medium' },
+  prefs: { font: 19, lh: 1.95, theme: 'light', width: 'medium', sidebarHidden: false },
   gbkTable: null,
   scrollSaveTimer: null,
 };
@@ -42,6 +42,7 @@ function applyPrefs() {
   $('#lblFont').textContent = state.prefs.font;
   $('#selTheme').value = state.prefs.theme;
   $('#selWidth').value = state.prefs.width;
+  document.body.classList.toggle('sidebar-collapsed', !!state.prefs.sidebarHidden && window.innerWidth > 820);
 }
 
 /* ---------------- 位置存取 ---------------- */
@@ -288,6 +289,15 @@ function gotoChapter(idx, opts) {
 }
 function nextChapter() { if (state.cur < state.chapters.length - 1) gotoChapter(state.cur + 1); }
 function prevChapter() { if (state.cur > 0) gotoChapter(state.cur - 1); }
+function toggleSidebar() {
+  if (window.innerWidth <= 820) {
+    document.body.classList.toggle('toc-open');
+  } else {
+    const hidden = document.body.classList.toggle('sidebar-collapsed');
+    state.prefs.sidebarHidden = hidden;
+    savePrefs();
+  }
+}
 
 /* ---------------- 打开 / 加载 ---------------- */
 async function openFile() {
@@ -454,7 +464,7 @@ function bind() {
     if (window.innerWidth <= 820) document.body.classList.remove('toc-open');
   });
   $('#tocSearch').addEventListener('input', filterTOC);
-  $('#btnToc').addEventListener('click', () => document.body.classList.toggle('toc-open'));
+  $('#btnSidebar').addEventListener('click', toggleSidebar);
 
   $('#selEncoding').addEventListener('change', () => {
     if (!state.origBuffer) return;
@@ -512,6 +522,7 @@ function bind() {
     const tag = (e.target.tagName || '').toLowerCase();
     const typing = e.target.isContentEditable || tag === 'input' || tag === 'select' || tag === 'textarea';
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); doSave(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') { e.preventDefault(); toggleSidebar(); return; }
     if (e.key === 'Escape' && state.editing) { toggleEdit(); return; }
     if (typing) return;
     if (e.key === 'ArrowLeft') { prevChapter(); e.preventDefault(); }

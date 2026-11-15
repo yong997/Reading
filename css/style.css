@@ -82,11 +82,12 @@ body{
 /* 布局 */
 #layout{ flex:1 1 auto; display:flex; min-height:0; overflow:hidden; }
 #sidebar{
-  width:270px; flex:0 0 270px;
+  width:270px; flex:0 0 270px; min-width:0;
   background: var(--bg-panel);
   border-right:1px solid var(--border);
   display:flex; flex-direction:column; min-height:0;
-  transition: margin-left .2s ease;
+  overflow:hidden;
+  transition: width .18s ease, flex-basis .18s ease, margin-left .2s ease;
 }
 .side-head{ padding:10px 12px; border-bottom:1px solid var(--border); }
 #tocSearch{
@@ -176,6 +177,12 @@ body.editing .chapter-body{ text-align:left; }
 ::-webkit-scrollbar-track{ background: transparent; }
 
 .only-mobile{ display:none; }
+.icon-btn{ padding:7px 10px; font-weight:600; }
+
+/* 桌面端：收起左侧目录 */
+@media (min-width: 821px){
+  body.sidebar-collapsed #sidebar{ width:0; flex:0 0 0; border-right:0; }
+}
 
 @media (max-width: 820px){
   #sidebar{ position:fixed; top:var(--toolbar-h); bottom:var(--status-h); left:0; z-index:30; margin-left:-280px; box-shadow:2px 0 12px rgba(0,0,0,.15); }
