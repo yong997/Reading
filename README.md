@@ -29,6 +29,21 @@
 
 无需 Python 也能用，但浏览器会以“只读打开 + 另存下载”方式工作：可以正常阅读和编辑，保存时会**下载一份副本**，而不是覆盖原文件。
 
+### 方式三：部署到 GitHub Pages（在线使用，也能写回）
+
+这是一个纯静态站点，可直接部署到 GitHub Pages：
+
+1. 仓库 **Settings → Pages**，Source 选 `Deploy from a branch`，分支选 `main`、目录选 `/ (root)`，保存。
+2. 稍等片刻，访问 `https://<你的用户名>.github.io/Reading/`。
+3. 由于 GitHub Pages 是 **https 安全上下文**，在 Chrome/Edge 中同样支持“**打开本地 txt → 编辑 → 直接保存回原文件**”。
+
+> 注意：网页版只在你的浏览器本地处理文件，不会上传小说内容；但仓库里建议**不要提交有版权的小说 txt**，只放代码即可。
+
+## 🔗 仓库
+
+- GitHub：<https://github.com/yong997/Reading>
+
+
 ## 🗂 目录结构
 
 ```
