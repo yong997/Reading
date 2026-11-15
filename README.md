@@ -54,6 +54,7 @@ Reading/
 ├─ js/
 │  ├─ app.js           核心逻辑（解码/分章/渲染/编辑/保存）
 │  └─ gbk-encode.js    GBK 编码表（构建时由 Python 生成，供保存 GBK 使用）
+├─ server.js           Node 备用静态服务器（无 Python 时使用）
 ├─ start.bat           Windows 一键启动本地服务器
 └─ README.md
 ```
