@@ -1,0 +1,4 @@
+* text=auto
+# Windows 批处理必须保留 CRLF 换行，禁止 git 自动转换
+*.bat -text
+*.cmd -text
