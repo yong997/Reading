@@ -10,3 +10,6 @@ desktop.ini
 
 # logs
 *.log
+
+# local shortcuts (machine-specific)
+*.lnk

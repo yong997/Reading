@@ -73,6 +73,21 @@ Reading/
 - [ ] 自定义阅读字体
 - [ ] 书签与批注
 
+## ❓ 常见问题
+
+### 双击 `start.bat` 弹出“打开文件 - 安全警告 / 无法验证发布者”？
+这是 Windows 对带有“来源标记(Mark of the Web)”或被判定为不安全的脚本的拦截（对所有这类 `.bat` 都会拦，属正常安全机制）。只放行本文件的几种办法：
+
+- **最简单**：双击项目里的 **`启动Reading.lnk`** 启动（它由系统受信任的 `cmd.exe` 调用脚本，不触发该弹窗；而其它直接双击的 `.bat` 仍会照常提示）。没有这个快捷方式时，可用下面一行 PowerShell 生成：
+  ```powershell
+  $ws=New-Object -ComObject WScript.Shell; $s=$ws.CreateShortcut("$PWD\启动Reading.lnk"); $s.TargetPath="$env:SystemRoot\System32\cmd.exe"; $s.Arguments='/c "'+(Join-Path $PWD 'start.bat')+'"'; $s.WorkingDirectory=$PWD; $s.Save()
+  ```
+- **解除单个文件锁定**：右键 `start.bat` → 属性 → 常规 → 勾选“解除锁定 / Unblock” → 确定（只对该文件生效）。
+- **命令方式**：`Unblock-File -Path "start.bat"`。
+
+### 打开后顶部导航被顶出视口 / 页面点不动？
+已修复（锁定根元素滚动、修正目录滚动方式、拖拽遮罩不再拦截点击）。请 `Ctrl+F5` 强制刷新加载最新 CSS/JS。
+
 ## 📄 License
 
 MIT
