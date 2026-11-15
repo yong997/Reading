@@ -7,9 +7,16 @@
   --toolbar-h: 52px;
   --status-h: 26px;
 }
-body[data-width="narrow"] #reader{ max-width: 34em; }
-body[data-width="medium"] #reader{ max-width: 46em; }
-body[data-width="wide"]   #reader{ max-width: 62em; }
+/* 正文宽度按“每行约多少字”随阅读字号自适应：narrow/medium/wide */
+body[data-width="narrow"] #reader{ max-width: calc(30 * var(--fs) + 80px); }
+body[data-width="medium"] #reader{ max-width: calc(38 * var(--fs) + 80px); }
+body[data-width="wide"]   #reader{ max-width: calc(48 * var(--fs) + 80px); }
+/* 收起目录后，正文加宽，减少两侧留白 */
+@media (min-width: 821px){
+  body.sidebar-collapsed[data-width="narrow"] #reader{ max-width: calc(40 * var(--fs) + 80px); }
+  body.sidebar-collapsed[data-width="medium"] #reader{ max-width: calc(50 * var(--fs) + 80px); }
+  body.sidebar-collapsed[data-width="wide"]   #reader{ max-width: calc(62 * var(--fs) + 80px); }
+}
 
 /* 主题 */
 body[data-theme="light"]{
@@ -105,7 +112,7 @@ body{
 
 /* 阅读区 */
 #viewport{ flex:1 1 auto; overflow-y:auto; scroll-behavior:smooth; }
-#reader{ max-width:46em; margin:0 auto; padding:38px 40px 80px; }
+#reader{ max-width: calc(38 * var(--fs) + 80px); margin:0 auto; padding:38px 40px 80px; transition:max-width .2s ease; }
 .empty-state{ text-align:center; color:var(--fg-soft); margin-top:12vh; }
 .empty-state h2{ color:var(--fg); font-size:22px; margin:.4em 0 .8em; }
 .empty-state .empty-icon{ font-size:52px; }
