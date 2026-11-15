@@ -29,6 +29,7 @@ body[data-theme="dark"]{
 }
 
 *{ box-sizing:border-box; }
+[hidden]{ display:none !important; }
 html,body{ height:100%; margin:0; }
 body{
   font-family: var(--font-ui);
@@ -165,6 +166,7 @@ body.editing .chapter-body{ text-align:left; }
   border:3px dashed var(--accent);
   display:flex; align-items:center; justify-content:center;
   font-size:22px; color:var(--fg); font-weight:600;
+  pointer-events:none;   /* 不拦截点击/拖拽事件，避免挡住页面 */
 }
 
 /* 滚动条 */

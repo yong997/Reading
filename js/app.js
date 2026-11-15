@@ -488,14 +488,14 @@ function bind() {
     e.target.value = '';
   });
 
-  // 拖拽
-  let dragN = 0;
-  window.addEventListener('dragenter', e => { e.preventDefault(); dragN++; $('#dropzone').hidden = false; });
-  window.addEventListener('dragover', e => e.preventDefault());
-  window.addEventListener('dragleave', e => { e.preventDefault(); if (--dragN <= 0) $('#dropzone').hidden = true; });
+  // 拖拽（用 dataTransfer.types 判断，避免遮罩卡住）
+  const hasFiles = e => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+  window.addEventListener('dragenter', e => { if (hasFiles(e)) { e.preventDefault(); $('#dropzone').hidden = false; } });
+  window.addEventListener('dragover', e => { if (hasFiles(e)) { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; } });
+  window.addEventListener('dragleave', e => { if (e.relatedTarget === null) $('#dropzone').hidden = true; });
   window.addEventListener('drop', async e => {
-    e.preventDefault(); dragN = 0; $('#dropzone').hidden = true;
-    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    e.preventDefault(); $('#dropzone').hidden = true;
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (!f) return;
     const buf = await f.arrayBuffer();
     loadFile(null, f.name, buf);
