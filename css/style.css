@@ -7,7 +7,7 @@
   --toolbar-h: 52px;
   --status-h: 26px;
 }
-body[data-width="narrow"] .reading-inner{ max-width: 34em; }
+body[data-width="narrow"] #reader{ max-width: 34em; }
 body[data-width="medium"] #reader{ max-width: 46em; }
 body[data-width="wide"]   #reader{ max-width: 62em; }
 
