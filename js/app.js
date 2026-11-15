@@ -416,6 +416,65 @@ function deleteChapter(idx) {
   status('已删除《' + name + '》，按 Ctrl+S 保存写回文件');
 }
 
+/* ---------------- 批量查找替换 ---------------- */
+function openReplace() {
+  const m = $('#replaceModal');
+  m.hidden = false;
+  setHint('');
+  const sel = (window.getSelection ? window.getSelection().toString() : '').trim();
+  if (sel && sel.length <= 30) $('#findText').value = sel;
+  $('#findText').focus();
+  $('#findText').select();
+}
+function closeReplace() { const m = $('#replaceModal'); if (m) m.hidden = true; }
+function setHint(msg, err) {
+  const h = $('#replaceHint');
+  if (!h) return;
+  h.textContent = msg || '';
+  h.classList.toggle('err', !!err);
+}
+function replaceCount() {
+  const find = $('#findText').value;
+  const useRegex = $('#useRegex').checked;
+  if (!find) { setHint('请输入查找内容', true); return -1; }
+  if (useRegex) {
+    try { const re = new RegExp(find, 'g'); return (state.text.match(re) || []).length; }
+    catch (e) { setHint('正则无效：' + e.message, true); return -1; }
+  }
+  let n = 0, i = 0;
+  while ((i = state.text.indexOf(find, i)) !== -1) { n++; i += find.length; }
+  return n;
+}
+function countReplace() {
+  if (!state.chapters.length) { setHint('请先打开文件', true); return; }
+  const n = replaceCount();
+  if (n >= 0) setHint('匹配到 ' + n + ' 处');
+}
+function doReplaceAll() {
+  const find = $('#findText').value;
+  const rep = $('#replaceText').value;
+  const useRegex = $('#useRegex').checked;
+  if (!find) { setHint('请输入查找内容', true); return; }
+  if (!state.chapters.length) { setHint('请先打开文件', true); return; }
+  const n = replaceCount();
+  if (n < 0) return;
+  if (n === 0) { setHint('未找到匹配', true); return; }
+  if (!confirm('将替换 ' + n + ' 处，确定？\n\n查找：' + find + '\n替换：' + rep)) return;
+  if (state.editing) commitCurrent();
+  const curIdx = state.cur;
+  let newText;
+  if (useRegex) { const re = new RegExp(find, 'g'); newText = state.text.replace(re, rep); }
+  else { newText = state.text.split(find).join(rep); }
+  state.text = newText;
+  state.dirty = true;
+  state.chapters = parseChapters(state.text);
+  state.cur = Math.min(curIdx, Math.max(0, state.chapters.length - 1));
+  renderTOC(); updateMeta(); renderChapter(state.cur, {});
+  updateDirtyUI();
+  setHint('已替换 ' + n + ' 处。记得按 Ctrl+S 保存写回文件。');
+  status('批量替换：' + n + ' 处，Ctrl+S 保存');
+}
+
 /* ---------------- 打开 / 加载 ---------------- */
 async function openFile() {
   if (window.showOpenFilePicker && window.isSecureContext) {
@@ -585,6 +644,13 @@ function bind() {
   $('#btnSave').addEventListener('click', doSave);
   $('#btnSaveAs').addEventListener('click', doSaveAs);
   $('#btnEdit').addEventListener('click', toggleEdit);
+  $('#btnReplace').addEventListener('click', openReplace);
+  $('#btnReplaceClose').addEventListener('click', closeReplace);
+  $('#btnFindCount').addEventListener('click', countReplace);
+  $('#btnReplaceAll').addEventListener('click', doReplaceAll);
+  const rm = $('#replaceModal');
+  if (rm) rm.addEventListener('click', e => { if (e.target.id === 'replaceModal') closeReplace(); });
+  ['#findText', '#replaceText'].forEach(s => { const el = $(s); if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); countReplace(); } }); });
   $('#btnPrev').addEventListener('click', prevChapter);
   $('#btnNext').addEventListener('click', nextChapter);
 
@@ -671,7 +737,12 @@ function bind() {
     const typing = e.target.isContentEditable || tag === 'input' || tag === 'select' || tag === 'textarea';
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); doSave(); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') { e.preventDefault(); toggleSidebar(); return; }
-    if (e.key === 'Escape' && state.editing) { toggleEdit(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') { e.preventDefault(); openReplace(); return; }
+    if (e.key === 'Escape') {
+      const rm = $('#replaceModal');
+      if (rm && !rm.hidden) { closeReplace(); return; }
+      if (state.editing) { toggleEdit(); return; }
+    }
     if (typing) return;
     if (e.key === 'ArrowLeft') { prevChapter(); e.preventDefault(); }
     else if (e.key === 'ArrowRight') { nextChapter(); e.preventDefault(); }

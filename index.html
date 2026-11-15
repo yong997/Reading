@@ -34,6 +34,7 @@
 
     <div class="tb-group">
       <button id="btnEdit" class="tb-btn" title="切换编辑模式（可直接修改正文）">✎ 编辑</button>
+      <button id="btnReplace" class="tb-btn" title="批量查找替换（Ctrl+H）">🔁 替换</button>
       <span class="tb-label">字号
         <button class="tb-mini" data-font="-1">A−</button>
         <span id="lblFont">19</span>
@@ -105,6 +106,26 @@
 
   <!-- 右键菜单 -->
   <div id="ctxMenu" class="ctx-menu" hidden></div>
+
+  <!-- 批量替换面板 -->
+  <div id="replaceModal" class="modal" hidden>
+    <div class="modal-box">
+      <h3>批量查找替换 <span class="modal-sub">（对全文生效）</span></h3>
+      <label class="field">查找
+        <input id="findText" type="text" placeholder="例如：楚幕" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="field">替换为
+        <input id="replaceText" type="text" placeholder="例如：楚暮" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="chk"><input id="useRegex" type="checkbox"> 使用正则表达式（高级）</label>
+      <div id="replaceHint" class="replace-hint"></div>
+      <div class="modal-actions">
+        <button id="btnFindCount" class="tb-btn">统计匹配</button>
+        <button id="btnReplaceAll" class="tb-btn primary">全部替换</button>
+        <button id="btnReplaceClose" class="tb-btn">关闭</button>
+      </div>
+    </div>
+  </div>
 
   <input type="file" id="fileInput" accept=".txt,text/plain" hidden>
 
