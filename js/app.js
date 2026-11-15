@@ -308,6 +308,7 @@ async function openFile() {
         multiple: false,
         types: [{ description: 'TXT / 文本', accept: { 'text/plain': ['.txt', '.md', '.log', '.text'] } }],
       });
+      try { await ensureWritePermission(h); } catch (e) {}
       const file = await h.getFile();
       const buf = await file.arrayBuffer();
       loadFile(h, file.name, buf);
@@ -366,6 +367,17 @@ function updateMeta() {
 }
 
 /* ---------------- 保存 ---------------- */
+async function ensureWritePermission(handle) {
+  if (!handle || !handle.queryPermission || !handle.requestPermission) return true;
+  try {
+    let p = await handle.queryPermission({ mode: 'readwrite' });
+    if (p === 'granted') return true;
+    p = await handle.requestPermission({ mode: 'readwrite' });
+    return p === 'granted';
+  } catch (e) {
+    return false;
+  }
+}
 async function doSave() {
   if (!state.chapters.length) return;
   if (state.editing) toggleEdit();
@@ -378,6 +390,8 @@ async function doSave() {
   }
   if (state.handle && state.handle.createWritable) {
     try {
+      // 只在第一次申请写权限（之后 Chrome 不会再弹“保存更改”）
+      await ensureWritePermission(state.handle);
       const w = await state.handle.createWritable();
       await w.write(bytes);
       await w.close();
