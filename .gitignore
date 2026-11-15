@@ -1,0 +1,12 @@
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# editors
+.vscode/
+.idea/
+*.swp
+
+# logs
+*.log
