@@ -241,6 +241,8 @@ function filterTOC() {
 /* ---------------- 编辑/提交 ---------------- */
 function toggleEdit() {
   if (!state.chapters.length) return;
+  const vp = $('#viewport');
+  const savedScroll = vp.scrollTop;
   if (state.editing) {
     commitCurrent();
     state.editing = false;
@@ -252,10 +254,9 @@ function toggleEdit() {
   btn.classList.toggle('active', state.editing);
   btn.textContent = state.editing ? '✓ 完成' : '✎ 编辑';
   renderChapter(state.cur, { keepScroll: true });
-  if (state.editing) {
-    const first = $('#chapterBody .para');
-    if (first) first.focus();
-  }
+  // innerHTML 重建会清空滚动高度，这里恢复到切换前的位置
+  vp.scrollTop = savedScroll;
+  requestAnimationFrame(() => { vp.scrollTop = savedScroll; });
 }
 function commitCurrent() {
   if (!state.chapters.length) return;
