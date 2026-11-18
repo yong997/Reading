@@ -461,6 +461,8 @@ function doReplaceAll() {
   if (n === 0) { setHint('未找到匹配', true); return; }
   if (!confirm('将替换 ' + n + ' 处，确定？\n\n查找：' + find + '\n替换：' + rep)) return;
   if (state.editing) commitCurrent();
+  const vp = $('#viewport');
+  const savedScroll = vp.scrollTop;
   const curIdx = state.cur;
   let newText;
   if (useRegex) { const re = new RegExp(find, 'g'); newText = state.text.replace(re, rep); }
@@ -469,7 +471,9 @@ function doReplaceAll() {
   state.dirty = true;
   state.chapters = parseChapters(state.text);
   state.cur = Math.min(curIdx, Math.max(0, state.chapters.length - 1));
-  renderTOC(); updateMeta(); renderChapter(state.cur, {});
+  renderTOC(); updateMeta(); renderChapter(state.cur, { keepScroll: true });
+  vp.scrollTop = savedScroll;
+  requestAnimationFrame(() => { vp.scrollTop = savedScroll; });
   updateDirtyUI();
   setHint('已替换 ' + n + ' 处。记得按 Ctrl+S 保存写回文件。');
   status('批量替换：' + n + ' 处，Ctrl+S 保存');
