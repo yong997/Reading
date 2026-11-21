@@ -366,13 +366,26 @@ function gotoChapter(idx, opts) {
 function nextChapter() { if (state.cur < state.chapters.length - 1) gotoChapter(state.cur + 1); }
 function prevChapter() { if (state.cur > 0) gotoChapter(state.cur - 1); }
 function toggleSidebar() {
+  let opened = false;
   if (window.innerWidth <= 820) {
+    opened = !document.body.classList.contains('toc-open');
     document.body.classList.toggle('toc-open');
   } else {
-    const hidden = document.body.classList.toggle('sidebar-collapsed');
-    state.prefs.sidebarHidden = hidden;
+    const collapsed = document.body.classList.toggle('sidebar-collapsed');
+    state.prefs.sidebarHidden = collapsed;
     savePrefs();
+    opened = !collapsed;
   }
+  if (opened) requestAnimationFrame(scrollTocToActive);
+}
+/* 把左侧目录滚动到当前章节并居中 */
+function scrollTocToActive() {
+  const toc = $('#toc');
+  const li = $('#toc li.active');
+  if (!toc || !li) return;
+  const tr = toc.getBoundingClientRect();
+  const lr = li.getBoundingClientRect();
+  toc.scrollTop += (lr.top - tr.top) - (tr.height / 2 - lr.height / 2);
 }
 
 /* ---------------- 删除章节 / 右键菜单 ---------------- */
